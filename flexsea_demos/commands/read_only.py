@@ -37,7 +37,7 @@ class ReadOnlyCommand(Command):
     # -----
     # _read_only
     # -----
-    def _read_only(device, nLoops):
+    def _read_only(self, device, nLoops):
         """
         Reads FlexSEA device and prints gathered data.
 
