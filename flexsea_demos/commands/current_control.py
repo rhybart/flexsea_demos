@@ -1,7 +1,6 @@
 from time import sleep
 from typing import Dict
-from typing import Int
-from tying import List
+from typing import List
 
 from cleo import Command
 from flexsea import flexsea as flex
@@ -92,7 +91,7 @@ class CurrentControlCommand(Command):
         params : dict
             The validated parameters.
         """
-        required = {"ports" : List, "baud_rate" : Int, "run_time" : Int, "gains" : Dict, "hold_current" : Int, "ramp_down_steps" : Int} 
+        required = {"ports" : List, "baud_rate" : int, "run_time" : int, "gains" : Dict, "hold_current" : int, "ramp_down_steps" : int} 
         for requiredParam, requiredParamType in required.items():
             try:
                 assert requiredParam in params.keys()

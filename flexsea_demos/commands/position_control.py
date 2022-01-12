@@ -1,7 +1,6 @@
 from time import sleep
 from typing import Dict
-from typing import Int
-from tying import List
+from typing import List
 
 from cleo import Command
 from flexsea import flexsea as flex
@@ -44,7 +43,7 @@ class PositionControlCommand(Command):
         data = device.read()
         device.print(data)
         initial_angle = data.mot_ang
-        device..set_gains(gains)
+        device.set_gains(gains)
         device.motor(fxe.FX_POSITION, initial_angle)
         for i in range(nLoops):
             sleep(0.1)
@@ -88,7 +87,7 @@ class PositionControlCommand(Command):
         params : dict
             The validated parameters.
         """
-        required = {"ports" : List, "baud_rate" : Int, "run_time" : int, "gains" : Dict}
+        required = {"ports" : List, "baud_rate" : int, "run_time" : int, "gains" : Dict}
         for requiredParam, requiredParamType in required.items():
             try:
                 assert requiredParam in params.keys()

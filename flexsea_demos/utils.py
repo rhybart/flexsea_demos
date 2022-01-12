@@ -2,6 +2,7 @@ import os
 
 from cleo.config import ApplicationConfig as BaseApplicationConfig
 from clikit.api.formatter import Style
+from flexsea import fxUtils as fxu
 import matplotlib
 import yaml
 

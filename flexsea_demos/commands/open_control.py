@@ -1,6 +1,5 @@
 from time import sleep
-from typing import Int
-from tying import List
+from typing import List
 
 from cleo import Command
 from flexsea import flexsea as fxs
@@ -103,7 +102,7 @@ class OpenControlCommand(Command):
     # -----
     # _validate
     # -----
-    def _validate(self, params)
+    def _validate(self, params):
         """
         The read_only demo requires at least one port, a baud rate,
         a run time, the number of cycles per device, and the max voltage.
@@ -123,7 +122,7 @@ class OpenControlCommand(Command):
         params : dict
             The validated parameters.
         """
-        required = {"ports" : List, "baud_rate" : Int, "run_time" : Int, "n_cycles" : Int, "max_voltage" : Int}
+        required = {"ports" : List, "baud_rate" : int, "run_time" : int, "n_cycles" : int, "max_voltage" : int}
         for requiredParam, requiredParamType in required.items():
             try:
                 assert requiredParam in params.keys()

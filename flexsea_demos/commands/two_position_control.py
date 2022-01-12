@@ -1,9 +1,7 @@
 from time import sleep
 from time import time
 from typing import Dict
-from typing import Float
-from typing import Int
-from tying import List
+from typing import List
 
 from cleo import Command
 from flexsea import flexsea as flex
@@ -133,7 +131,7 @@ class TwoPositionControlCommand(Command):
         params : dict
             The validated parameters.
         """
-        required = {"ports" : List, "baud_rate" : Int, "run_time" : Int, "delta" : Int, "transition_time" : Float, "gains" : Dict}
+        required = {"ports" : List, "baud_rate" : int, "run_time" : int, "delta" : int, "transition_time" : float, "gains" : Dict}
         for requiredParam, requiredParamType in required.items():
             try:
                 assert requiredParam in params.keys()

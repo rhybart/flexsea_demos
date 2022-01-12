@@ -74,7 +74,7 @@ class Device:
     # -----
     def set_gains(self, gains):
         # Gains are, in order: kp, ki, kd, K, B & ff
-        self.fxs.set_gains(self.dev_id, gains["kp"], gains.["ki"], gains["kd"], gains["K"], gains["B"], gains["ff"])
+        self.fxs.set_gains(self.dev_id, gains["kp"], gains["ki"], gains["kd"], gains["K"], gains["B"], gains["ff"])
 
     # -----
     # close

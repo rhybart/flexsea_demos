@@ -1,9 +1,7 @@
 from time import sleep
 from time import time
 from typing import Dict
-from typing import Float
-from typing import Int
-from tying import List
+from typing import List
 
 from cleo import Command
 from flexsea import flexsea as flex
@@ -104,7 +102,7 @@ class ImpedanceControlCommand(Command):
     def _plot(self):
         title = "Impedance Control Demo"
         plt.plot(self.plot_data["times"], self.plot_data["requests"], color="b", label="Desired position")
-        plt.plot(self.plot_data["times", self.plot_data["measurements"], color="r", label="Measured position")
+        plt.plot(self.plot_data["times"], self.plot_data["measurements"], color="r", label="Measured position")
         plt.xlabel("Time (s)")
         plt.ylabel("Encoder position")
         plt.title(title)
@@ -142,7 +140,7 @@ class ImpedanceControlCommand(Command):
         params : dict
             The validated parameters.
         """
-        required = {"ports" : List, "baud_rate" : Int, "run_time" : Int, "gains" : Dict, "transition_time" : Float, "delta" : Int, "b_increments" : Int}
+        required = {"ports" : List, "baud_rate" : int, "run_time" : int, "gains" : Dict, "transition_time" : float, "delta" : int, "b_increments" : int}
         for requiredParam, requiredParamType in required.items():
             try:
                 assert requiredParam in params.keys()
