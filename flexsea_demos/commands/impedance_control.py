@@ -4,7 +4,6 @@ from typing import Dict
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 import matplotlib
@@ -24,15 +23,16 @@ class ImpedanceControlCommand(Command):
     impedance_control
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
     required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "run_time" : int,
-        "gains" : Dict,
-        "transition_time" : float,
-        "delta" : int,
-        "b_increments" : int
+        "ports": List,
+        "baud_rate": int,
+        "run_time": int,
+        "gains": Dict,
+        "transition_time": float,
+        "delta": int,
+        "b_increments": int,
     }
 
     # -----
@@ -44,14 +44,14 @@ class ImpedanceControlCommand(Command):
         self.baud_rate = 0
         self.run_time = 0
         self.gains = {}
-        self.transition_time = 0.
+        self.transition_time = 0.0
         self.delta = 0
         self.b_increments = 0
         self.nLoops = 0
         self.transition_steps = 0
-        self.start_time = 0.
+        self.start_time = 0.0
         self.fxs = None
-        self.plot_data = {"times" : [], "requests" : [], "measurements" : []}
+        self.plot_data = {"times": [], "requests": [], "measurements": []}
 
         matplotlib.use("WebAgg")
         if fxu.is_pi():
@@ -88,7 +88,7 @@ class ImpedanceControlCommand(Command):
         device.motor(fxe.FX_IMPEDANCE, initial_angle)
         device.set_gains(self.gains)
         current_pos = 0
-        positions = [initial_angle, initial_angle + delta]
+        positions = [initial_angle, initial_angle + self.delta]
         sleep(0.4)
         self.start_time = time()
         print("")
@@ -125,13 +125,13 @@ class ImpedanceControlCommand(Command):
             self.plot_data["times"],
             self.plot_data["requests"],
             color="b",
-            label="Desired position"
+            label="Desired position",
         )
         plt.plot(
             self.plot_data["times"],
             self.plot_data["measurements"],
             color="r",
-            label="Measured position"
+            label="Measured position",
         )
         plt.xlabel("Time (s)")
         plt.ylabel("Encoder position")
@@ -144,5 +144,5 @@ class ImpedanceControlCommand(Command):
     # _reset_plot
     # -----
     def _reset_plot(self):
-        self.plot_data = {"times" : [], "requests" : [], "measurements" : []}
+        self.plot_data = {"times": [], "requests": [], "measurements": []}
         plt.clf()

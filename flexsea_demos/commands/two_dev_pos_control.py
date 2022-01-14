@@ -2,7 +2,7 @@ from time import sleep
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
+from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
 from flexsea_demos.device import Device
@@ -19,12 +19,9 @@ class TwoDevPositionCommand(Command):
     two_devices_position_control
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
-    required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "run_time" : int
-    }
+    required = {"ports": List, "baud_rate": int, "run_time": int}
 
     # -----
     # constructor
@@ -54,18 +51,18 @@ class TwoDevPositionCommand(Command):
             raise AssertionError(f"Need two devices. Got: '{len(self.ports)}'")
 
         for i in range(2):
-            self.devices.append(Device(self.fxs, self.ports[i], self.baud_rate)
+            self.devices.append(Device(self.fxs, self.ports[i], self.baud_rate))
             self.devices[i].set_gains(50, 3, 0, 0, 0, 0)
             self.devices[i].motor(fxe.FX_POSITION, self.devices[i].initial_position)
 
-        self_two_devices_position_control()
+        self._two_devices_position_control()
 
         print("Turning off position control...")
         for i in range(2):
             self.devices[i].set_gains(0, 0, 0, 0, 0, 0)
             self.devices[i].motor(fxe.FX_NONE, 0)
             sleep(0.5)
-            self.devices[j]..close()
+            self.devices[i].close()
 
     # -----
     # _two_devices_position_control
@@ -76,13 +73,13 @@ class TwoDevPositionCommand(Command):
             fxu.clear_terminal()
 
             for j in range(2):
-            cur_pos = self.devices[j].get_pos()
-            pos0 = self.devices[j].initial_position
+                cur_pos = self.devices[j].get_pos()
+                pos0 = self.devices[j].initial_position
 
-            print(f"Device {j}:\n---------\n")
-            print(f"Desired:              {initial_position}")
-            print(f"Measured:             {cur_pos}")
-            print(f"Difference:           {cur_pos - initial_position}\n")
-            self.devices[j].print()
+                print(f"Device {j}:\n---------\n")
+                print(f"Desired:              {pos0}")
+                print(f"Measured:             {cur_pos}")
+                print(f"Difference:           {cur_pos - pos0}\n")
+                self.devices[j].print()
 
-            fxu.print_loop_count(i, self.nLoops)
+                fxu.print_loop_count(i, self.nLoops)

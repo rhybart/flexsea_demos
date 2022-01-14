@@ -1,11 +1,14 @@
 from time import sleep
+from time import time
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxPlotting as fxp
 from flexsea import fxUtils as fxu
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
 from flexsea_demos.device import Device
 from flexsea_demos.utils import setup
@@ -21,19 +24,20 @@ class HighSpeedCommand(Command):
     high_speed
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
     required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "controller_type" : int,
-        "signal_type" : int,
-        "cmd_freq" : int,
-        "signal_amplitude" : int,
-        "nLoops" : int,
-        "signal_freq" : int,
-        "cycle_delay" : int,
-        "request_jitter" : bool,
-        "jitter" : int
+        "ports": List,
+        "baud_rate": int,
+        "controller_type": int,
+        "signal_type": int,
+        "cmd_freq": int,
+        "signal_amplitude": int,
+        "nLoops": int,
+        "signal_freq": int,
+        "cycle_delay": int,
+        "request_jitter": bool,
+        "jitter": int,
     }
 
     # -----
@@ -55,18 +59,19 @@ class HighSpeedCommand(Command):
         self.jitter = 0
 
         self.fxs = None
-        self.dt = 0.
+        self.dt = 0.0
         self.start_time = None
         self.samples = []
         self.figure_counter = 1
-        self.signal = {"sine" : 1, "line" : 2}
+        self.signal = {"sine": 1, "line": 2}
+        self.i = 0
         self.plot_data = {
-            "requests" = [],
-            "measurements" = [],
-            "times" = [],
-            "cycle_stop_times" = [],
-            "dev_write_command_times" = [],
-            "dev_read_command_times" = [],
+            "requests": [],
+            "measurements": [],
+            "times": [],
+            "cycle_stop_times": [],
+            "dev_write_command_times": [],
+            "dev_read_command_times": [],
         }
 
         matplotlib.use("WebAgg")
@@ -111,7 +116,9 @@ class HighSpeedCommand(Command):
             f = 1
         self.samples = fxu.sin_generator(self.signal_amplitude, f, self.cmd_freq)
         if self.request_jitter:
-            self.samples = self.samples + np.random.normal(loc=self.jitter, size=self.samples.shape)
+            self.samples = self.samples + np.random.normal(
+                loc=self.jitter, size=self.samples.shape
+            )
         print("Command table:")
         print(np.int64(self.samples))
 
@@ -127,6 +134,7 @@ class HighSpeedCommand(Command):
         else:
             pos0 = 0
 
+        self.i = 0
         for rep in range(self.nLoops):
             elapsed_time = time() - self.start_time
             fxu.print_loop_count_and_time(rep, self.nLoops, elapsed_time)
@@ -154,6 +162,7 @@ class HighSpeedCommand(Command):
                 self.plot_data["times"].append(time() - self.start_time)
                 self.plot_data["measurements"].append(val)
                 self.plot_data["requests"].append(sample)
+                self.i += 1
 
             # Delay between cycles (sine wave only)
             if self.signal_type == self.signal["sine"]:
@@ -166,8 +175,9 @@ class HighSpeedCommand(Command):
                     elif device.controller_type == fxe.HSS_POSITION:
                         self.plot_data["measurements"].append(data.mot_ang - pos0)
 
-                    plot_data["times"].append(time() - self.start_time)
-                    plot_data["requests"].append(sample)
+                    self.plot_data["times"].append(time() - self.start_time)
+                    self.plot_data["requests"].append(sample)
+                    self.i += 1
 
             # We'll draw a line at the end of every period
             self.plot_data["cycle_stop_times"].append(time() - self.start_time)
@@ -183,23 +193,26 @@ class HighSpeedCommand(Command):
         elapsed_time = time() - self.start_time
         actual_period = self.plot_data["cycle_stop_times"][0]
         actual_frequency = 1 / actual_period
-        cmd_freq = i / elapsed_time
+        cmd_freq = self.i / elapsed_time
         # Figure: setpoint, desired vs measured (1st device)
-        figure_counter = fxp.plot_setpoint_vs_desired(
+        self.figure_counter = fxp.plot_setpoint_vs_desired(
             device.dev_id,
             self.figure_counter,
             device.controller_type,
             actual_frequency,
             self.signal_amplitude,
             signal_type_str,
-            self.cmd_freq,
+            cmd_freq,
             self.plot_data["times"],
             self.plot_data["requests"],
             self.plot_data["measurements"],
             self.plot_data["cycle_stop_times"],
         )
         self.figure_counter = fxp.plot_exp_stats(
-            device.dev_id, self.figure_counter, self.plot_data["dev_write_command_times"], self.plot_data["dev_read_command_times"]
+            device.dev_id,
+            self.figure_counter,
+            self.plot_data["dev_write_command_times"],
+            self.plot_data["dev_read_command_times"],
         )
         fxu.print_plot_exit()
         plt.show()
@@ -209,11 +222,11 @@ class HighSpeedCommand(Command):
     # -----
     def _reset_plot(self):
         self.plot_data = {
-            "requests" = [],
-            "measurements" = [],
-            "times" = [],
-            "cycle_stop_times" = [],
-            "dev_write_command_times" = [],
-            "dev_read_command_times" = [],
+            "requests": [],
+            "measurements": [],
+            "times": [],
+            "cycle_stop_times": [],
+            "dev_write_command_times": [],
+            "dev_read_command_times": [],
         }
         plt.clf()

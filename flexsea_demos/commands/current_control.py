@@ -3,7 +3,6 @@ from typing import Dict
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
@@ -21,15 +20,16 @@ class CurrentControlCommand(Command):
     current_control
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
     required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "run_time" : int,
-        "gains" : Dict,
-        "hold_current" : int,
-        "ramp_down_steps" : int
-    } 
+        "ports": List,
+        "baud_rate": int,
+        "run_time": int,
+        "gains": Dict,
+        "hold_current": int,
+        "ramp_down_steps": int,
+    }
 
     # -----
     # constructor
@@ -68,7 +68,9 @@ class CurrentControlCommand(Command):
         for _ in range(self.nLoops):
             self._ramp(device, self.hold_current)
         for i in range(self.ramp_down_steps):
-            current = self.hold_current * (self.ramp_down_steps - i) / self.ramp_down_steps
+            current = (
+                self.hold_current * (self.ramp_down_steps - i) / self.ramp_down_steps
+            )
             self._ramp(device, current)
         device.motor(fxe.FX_NONE, 0)
         sleep(0.5)

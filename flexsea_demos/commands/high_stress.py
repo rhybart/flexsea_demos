@@ -2,14 +2,16 @@ from time import sleep
 from time import time
 from typing import List
 
+from cleo import Command
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
-from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxPlotting as fxp
 from flexsea import fxUtils as fxu
+
+from flexsea_demos.device import Device
+from flexsea_demos.utils import setup
 
 
 # ============================================
@@ -22,18 +24,19 @@ class HighStressCommand(Command):
     high_stress
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
     required = {
-    "ports" : List,
-    "baud_rate" : int,
-    "cmd_freq" : int,
-    "position_amplitude" : int,
-    "current_amplitude" : int,
-    "position_freq" : int
-    "current_freq" : int
-    "current_asymmetric_g" : float,
-    "nLoops" : int,
-}
+        "ports": List,
+        "baud_rate": int,
+        "cmd_freq": int,
+        "position_amplitude": int,
+        "current_amplitude": int,
+        "position_freq": int,
+        "current_freq": int,
+        "current_asymmetric_g": float,
+        "nLoops": int,
+    }
 
     # -----
     # constructor
@@ -60,9 +63,9 @@ class HighStressCommand(Command):
         self.cycle_stop_times = []
         self.figure_ind = 1
         self.samples = {
-            "position_samples" : [],
-            "current_samples" : [],
-            "current_samples_line" : []
+            "position_samples": [],
+            "current_samples": [],
+            "current_samples_line": [],
         }
 
         matplotlib.use("WebAgg")
@@ -79,7 +82,7 @@ class HighStressCommand(Command):
         setup(self, self.required, self.argument("paramFile"))
         self.dt = float(1 / (float(self.cmd_freq)))
         for i, port in enumerate(self.ports):
-            self.devices.append({"port" : Device(self.fxs, port, self.baud_rate)})
+            self.devices.append({"port": Device(self.fxs, port, self.baud_rate)})
             self.devices[i]["initial_pos"] = self.devices[i]["port"].initial_position
             self.devices[i]["data"] = self.devices[i]["port"].read()
 
@@ -110,7 +113,8 @@ class HighStressCommand(Command):
 
         self._print_stats(elapsed_time)
         self._plot()
-        fxs.close_all()
+        for dev in devices:
+            dev["port"].close()
 
     # -----
     # _step0
@@ -134,12 +138,14 @@ class HighStressCommand(Command):
             # Create interpolation angles for each device
             lin_samples = []
             for dev in self.devices:
-                lin_samples.append(fxu.linear_interp(dev["data"].mot_ang, dev["initial_pos"], 360))
+                lin_samples.append(
+                    fxu.linear_interp(dev["data"].mot_ang, dev["initial_pos"], 360)
+                )
 
             for samples in np.array(lin_samples).transpose():
                 cmds = [{"cur": 0, "pos": sample} for sample in samples]
                 sleep(self.dt)
-                self._send_and_time_cmds(cmds, fxe.FX_POSITION, pos_gains, False)
+                self._send_and_time_cmds(cmds, fxe.FX_POSITION, self.pos_gains, False)
                 self.cmd_count += 1
 
     # -----
@@ -151,7 +157,7 @@ class HighStressCommand(Command):
             for dev in self.devices:
                 cmds.append({"cur": 0, "pos": sample + dev["initial_pos"]})
             sleep(self.dt)
-            self._send_and_time_cmds(cmds, fxe.FX_POSITION, pos_gains, False)
+            self._send_and_time_cmds(cmds, fxe.FX_POSITION, self.pos_gains, False)
             self.cmd_count += 1
 
     # -----
@@ -162,7 +168,7 @@ class HighStressCommand(Command):
         # TODO(CA): Investigate this problem and remove the hack below
         # Set gains several times since they might not get set when only set once.
         for _ in range(5):
-            self._send_and_time_cmds(cmds, fxe.FX_CURRENT, cur_gains, True)
+            self._send_and_time_cmds(cmds, fxe.FX_CURRENT, self.cur_gains, True)
             sleep(self.dt)
 
     # -----
@@ -179,7 +185,7 @@ class HighStressCommand(Command):
             cmds = [{"cur": sample, "pos": dev["initial_pos"]} for dev in self.devices]
 
             sleep(self.dt)
-            self._send_and_time_cmds(cmds, fxe.FX_CURRENT, cur_gains, False)
+            self._send_and_time_cmds(cmds, fxe.FX_CURRENT, self.cur_gains, False)
             self.cmd_count += 1
 
     # -----
@@ -189,7 +195,7 @@ class HighStressCommand(Command):
         for sample in self.samples["current_samples_line"]:
             cmds = [{"cur": sample, "pos": dev["initial_pos"]} for dev in self.devices]
             sleep(self.dt)
-            self._send_and_time_cmds(cmds, fxe.FX_CURRENT, cur_gains, False)
+            self._send_and_time_cmds(cmds, fxe.FX_CURRENT, self.cur_gains, False)
             self.cmd_count += 1
 
     # -----
@@ -197,14 +203,10 @@ class HighStressCommand(Command):
     # -----
     def _get_samples(self):
         self.samples["position_samples"] = fxu.sin_generator(
-            self.position_amplitude,
-            self.position_freq,
-            self.cmd_freq
+            self.position_amplitude, self.position_freq, self.cmd_freq
         )
         self.samples["current_samples"] = fxu.sin_generator(
-            self.current_amplitude,
-            self.current_freq,
-            self.cmd_freq
+            self.current_amplitude, self.current_freq, self.cmd_freq
         )
         self.samples["current_samples_line"] = fxu.line_generator(0, 0.5, self.cmd_freq)
 
@@ -253,11 +255,13 @@ class HighStressCommand(Command):
         print(f"Total time (s): {elapsed_time}")
         print(f"Requested command frequency: {self.cmd_freq}")
         print(f"Actual command frequency (Hz): {self.cmd_count / elapsed_time}")
-        print(f"\ncurrent_samples_line: {len(current_samples_lines)}")
-        print(f"size(TIMESTAMPS): {len(self.timestamps}")
-        print(f"size(currentRequests): {len(self.devices[0]['curr_requests']}")
-        print(f"size(currentMeasurements0): {len(self.devices[0]['curr_measurements']}")
-        print(f"size(SET_GAINS_TIMES): {len(self.devices[0]['gains_times']}\n")
+        print(f"\ncurrent_samples_line: {len(self.samples['current_samples_lines'])}")
+        print(f"size(TIMESTAMPS): {len(self.timestamps)}")
+        print(f"size(currentRequests): {len(self.devices[0]['curr_requests'])}")
+        print(
+            f"size(currentMeasurements0): {len(self.devices[0]['curr_measurements'])}"
+        )
+        print(f"size(SET_GAINS_TIMES): {len(self.devices[0]['gains_times'])}\n")
 
     # -----
     # _plot

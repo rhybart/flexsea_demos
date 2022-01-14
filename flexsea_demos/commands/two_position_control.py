@@ -4,7 +4,6 @@ from typing import Dict
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 import matplotlib
@@ -24,14 +23,15 @@ class TwoPositionCommand(Command):
     two_position_control
         {paramFile : Yaml file containing the parameters for the demo.}
     """
+
     # Schema of parameters required by the demo
     required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "run_time" : int,
-        "delta" : int,
-        "transition_time" : float,
-        "gains" : Dict
+        "ports": List,
+        "baud_rate": int,
+        "run_time": int,
+        "delta": int,
+        "transition_time": float,
+        "gains": Dict,
     }
 
     # -----
@@ -43,9 +43,9 @@ class TwoPositionCommand(Command):
         self.baud_rate = 0
         self.run_time = 0
         self.delta = 0
-        self.transition_time = 0.
+        self.transition_time = 0.0
         self.gains = {}
-        self.plot_data = {"times" : [], "requests" : [], "measurements" : []}
+        self.plot_data = {"times": [], "requests": [], "measurements": []}
         self.nLoops = 0
         self.transition_steps = 0
         self.start_time = 0
@@ -81,14 +81,14 @@ class TwoPositionCommand(Command):
     def _two_position_control(self, device):
         data = device.read()
         initial_angle = data.mot_ang
-        positions = [initial_angle, initial_angle + delta]
+        positions = [initial_angle, initial_angle + self.delta]
         current_pos = 0
 
         device.set_gains(50, 0, 0, 0, 0, 0)
         device.motor(fxe.FX_POSITION, initial_angle)
         self.start_time = time()
 
-        for i in range(self..nLoops):
+        for i in range(self.nLoops):
             sleep(0.1)
             data = device.read()
             fxu.clear_terminal()
@@ -115,13 +115,13 @@ class TwoPositionCommand(Command):
             self.plot_data["times"],
             self.plot_data["requests"],
             color="b",
-            label="Desired position"
+            label="Desired position",
         )
         plt.plot(
             self.plot_data["times"],
             self.plot_data["measurements"],
             color="r",
-            label="Measured position"
+            label="Measured position",
         )
         plt.xlabel("Time (s)")
         plt.ylabel("Encoder position")
@@ -133,5 +133,5 @@ class TwoPositionCommand(Command):
     # _reset_plot
     # -----
     def _reset_plot(self):
-        self.plot_data = {"times" : [], "requests" : [], "measurements" : []}
+        self.plot_data = {"times": [], "requests": [], "measurements": []}
         plt.clf()

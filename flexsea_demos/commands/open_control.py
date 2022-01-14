@@ -2,7 +2,6 @@ from time import sleep
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as fxs
 from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
@@ -20,13 +19,14 @@ class OpenControlCommand(Command):
     open_control
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
     required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "run_time" : int,
-        "n_cycles" : int,
-        "max_voltage" : int
+        "ports": List,
+        "baud_rate": int,
+        "run_time": int,
+        "n_cycles": int,
+        "max_voltage": int,
     }
 
     # -----
@@ -66,13 +66,13 @@ class OpenControlCommand(Command):
         cycle_time = self.runTime / float(self.n_cycles)
         step_count = int((cycle_time / 2) / 0.1)
         for s in range(step_count):
-            self.voltages.append(-1 * self.max_voltage * (s * 1. / step_count))
+            self.voltages.append(-1 * self.max_voltage * (s * 1.0 / step_count))
 
     # -----
     # _open_control
     # -----
     def _open_control(self, device):
-        print(f"Setting open control for port {port}...")
+        print(f"Setting open control for device {device.dev_id}...")
         device.motor(fxe.FX_VOLTAGE, 0)
         sleep(0.5)
 
@@ -102,10 +102,10 @@ class OpenControlCommand(Command):
         device : flexsea_demos.device.Device
             Object that manages the device information and state.
 
-        voltage_mv : float
+        voltage : float
             The voltage to set.
         """
         sleep(0.1)
-        device.motor(fxe.FX_VOLTAGE, voltage_mv)
+        device.motor(fxe.FX_VOLTAGE, voltage)
         fxu.clear_terminal()
         device.print()

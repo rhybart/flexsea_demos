@@ -2,7 +2,7 @@ from time import sleep
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
+from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
 from flexsea_demos.device import Device
@@ -19,12 +19,9 @@ class LeaderFollowerCommand(Command):
     leader_follower
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
-    required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "run_time" : int
-    }
+    required = {"ports": List, "baud_rate": int, "run_time": int}
 
     # -----
     # constructor
@@ -55,7 +52,7 @@ class LeaderFollowerCommand(Command):
             raise AssertionError(f"Need two devices. Got: '{len(self.ports)}'")
 
         for i in range(2):
-            self.devices.append(Device(self.fxs, self.ports[i], self.baud_rate)
+            self.devices.append(Device(self.fxs, self.ports[i], self.baud_rate))
 
         # Set first device to current controller with 0 current (0 torque)
         self.devices[0].set_gains(40, 400, 0, 0, 0, 128)
@@ -63,7 +60,7 @@ class LeaderFollowerCommand(Command):
 
         # Set position controller for second device
         self.devices[1].set_gains(100, 1, 0, 0, 0, 0)
-        self.devices[1].motor(fxe.FX_POSITION, initial_angle_1)
+        self.devices[1].motor(fxe.FX_POSITION, self.devices[1].initial_position)
 
         self._leader_follower()
 
@@ -84,19 +81,18 @@ class LeaderFollowerCommand(Command):
         leader_id = self.devices[0].dev_id
         follower_id = self.devices[1].dev_id
 
-		for i in range(self.nLoops):
-			sleep(self.loop_delay)
-			fxu.clear_terminal()
+        for i in range(self.nLoops):
+            sleep(self.loop_delay)
+            fxu.clear_terminal()
 
-			leader_data = self.devices[0].read()
-			follower_data = self.devices[1].read()
+            leader_data = self.devices[0].read()
 
-			diff = leader_data.mot_ang - leader_pos0
+            diff = leader_data.mot_ang - leader_pos0
 
-			self.devices[1].motor(fxe.FX_POSITION, follower_pos0 + diff)
+            self.devices[1].motor(fxe.FX_POSITION, follower_pos0 + diff)
 
-			print(f"Device {follower_id} following device {leader_id}\n")
+            print(f"Device {follower_id} following device {leader_id}\n")
             self.devices[1].print()
-			print("")
-			self.devices[0].print()
-			fxu.print_loop_count(i, self.nLoops)
+            print("")
+            self.devices[0].print()
+            fxu.print_loop_count(i, self.nLoops)

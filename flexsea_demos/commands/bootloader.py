@@ -1,8 +1,8 @@
+from time import sleep
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
-from flexsea import fxUtils as fxu
+from flexsea import fxEnums as fxe
 
 from flexsea_demos.device import Device
 from flexsea_demos.utils import setup
@@ -18,11 +18,12 @@ class BootloaderCommand(Command):
     bootloader
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
     required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "target" : str,
+        "ports": List,
+        "baud_rate": int,
+        "target": str,
     }
 
     # -----
@@ -55,13 +56,13 @@ class BootloaderCommand(Command):
         for port in self.ports:
             device = Device(self.fxs, port, self.baud_rate)
             self._bootloader(device)
-            device..close()
+            device.close()
 
     # -----
     # _bootloader
     # -----
     def _bootloader(self, device):
-        print(f"Activating {TARGETS[self.target]['name']} bootloader", flush=True)
+        print(f"Activating {self.targets[self.target]['name']} bootloader", flush=True)
         wait_step = 1
         state = fxe.FX_FAILURE.value
         timeout = self.run_time
@@ -77,13 +78,17 @@ class BootloaderCommand(Command):
             sleep(wait_step)
             timeout -= wait_step
             try:
-                state = fxs.is_bootloader_activated(device.dev_id)
-            except ValueError as err:
-                raise RuntimeError from err
-            except IOError as err:
+                state = device.is_bootloader_activated()
+            except ValueError:
+                raise RuntimeError
+            except IOError:
                 pass
 
         if state == fxe.FX_SUCCESS.value:
-            print(f"{TARGETS[self.target]['name']} bootloader activated", flush=True)
+            print(
+                f"{self.targets[self.target]['name']} bootloader activated", flush=True
+            )
         else:
-            print(f"{TARGETS[self.target]['name']} bootloader not active", flush=True)
+            print(
+                f"{self.targets[self.target]['name']} bootloader not active", flush=True
+            )

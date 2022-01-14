@@ -24,19 +24,19 @@ class FlexseaDemoApplication(Application):
     Defines the base `run_demos` command and adds each demo as a
     subcommand.
     """
+
     # -----
     # constructor
     # -----
     def __init__(self):
         super().__init__(config=ApplicationConfig())
-        for command in self._get_commands():
-            self.add(command())
+        self._get_commands()
 
     # -----
     # _get_commands
     # -----
     def _get_commands(self):
-        commandList = [
+        command_list = [
             BootloaderCommand,
             CurrentControlCommand,
             FindPolesCommand,
@@ -51,4 +51,5 @@ class FlexseaDemoApplication(Application):
             TwoPositionCommand,
             VersionCommand,
         ]
-        return commandList
+        for command in command_list:
+            self.add(command)

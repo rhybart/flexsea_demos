@@ -3,7 +3,6 @@ from typing import Dict
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
@@ -21,13 +20,9 @@ class PositionControlCommand(Command):
     position_control
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
-    required = {
-        "ports" : List,
-        "baud_rate" : int,
-        "run_time" : int,
-        "gains" : Dict
-    }
+    required = {"ports": List, "baud_rate": int, "run_time": int, "gains": Dict}
 
     # -----
     # constructor

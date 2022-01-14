@@ -2,7 +2,7 @@ from time import sleep
 from typing import List
 
 from cleo import Command
-from flexsea import flexsea as flex
+from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
 from flexsea_demos.device import Device
@@ -19,10 +19,11 @@ class VersionCommand(Command):
     check_version
         {paramFile : Yaml file with demo parameters.}
     """
+
     # Schema of parameters required by the demo
     required = {
-        "ports" : List,
-        "baud_rate" : int,
+        "ports": List,
+        "baud_rate": int,
     }
 
     # -----
@@ -51,7 +52,7 @@ class VersionCommand(Command):
     # _get_version
     # -----
     def _get_version(self, device):
-        if fxs.request_firmware_version(device.dev_id) == fxe.FX_SUCCESS.value:
+        if device.request_firmware_version() == fxe.FX_SUCCESS.value:
             print("Collecting version information. Please wait...", flush=True)
         else:
             print("Firware version request failed", flush=True)
@@ -61,7 +62,7 @@ class VersionCommand(Command):
         sleep(5)
 
         fw_array = fxe.FW()
-        fw_array = fxs.get_last_received_firmware_version(device.dev_id)
+        fw_array = device.get_last_received_firmware_version()
         fw_mn = fxu.decode(fw_array.Mn)
         fw_ex = fxu.decode(fw_array.Ex)
         fw_re = fxu.decode(fw_array.Re)

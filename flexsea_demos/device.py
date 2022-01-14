@@ -1,6 +1,5 @@
 from time import sleep
 
-from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
@@ -12,6 +11,7 @@ class Device:
     """
     Contains and manages the actpack/exoboot information and state.
     """
+
     # -----
     # constructor
     # -----
@@ -33,8 +33,10 @@ class Device:
 
         try:
             app_name = fxe.APP_NAMES[self.app_type.value]
-        except KeyError:
-            raise RuntimeError(f"Unsupported application type: {self.app_type.value}")
+        except KeyError as err:
+            raise RuntimeError(
+                f"Unsupported application type: {self.app_type.value}"
+            ) from err
 
         print(f"Your device is an '{app_name}'", flush=True)
 
@@ -61,6 +63,9 @@ class Device:
     # read
     # -----
     def read(self):
+        """
+        Reads the current state of the device.
+        """
         return self.fxs.read_device(self.dev_id)
 
     # -----
@@ -78,20 +83,64 @@ class Device:
     # set_gains
     # -----
     def set_gains(self, gains):
-        # Gains are, in order: kp, ki, kd, K, B & ff
-        self.fxs.set_gains(self.dev_id, gains["kp"], gains["ki"], gains["kd"], gains["K"], gains["B"], gains["ff"])
+        """
+        Sets the gains on the device. Gains are, in order:
+        kp, ki, kd, K, B & ff
+        """
+        self.fxs.set_gains(
+            self.dev_id,
+            gains["kp"],
+            gains["ki"],
+            gains["kd"],
+            gains["K"],
+            gains["B"],
+            gains["ff"],
+        )
 
     # -----
     # get_pos
     # -----
     def get_pos(self):
+        """
+        Returns the current position of the device.
+        """
         return self.read().mot_ang
 
     # -----
     # activate_bootloader
     # -----
     def activate_bootloader(self, target):
+        """
+        Activates the device's bootloader.
+        """
         self.fxs.activate_bootloader(self.dev_id, target)
+
+    # -----
+    # is_bootloader_activated
+    # -----
+    def is_bootloader_activated(self):
+        """
+        Checks to see if the device's bootloader is active.
+        """
+        return self.fxs.is_bootloader_activated(self.dev_id)
+
+    # -----
+    # request_firmware_version
+    # -----
+    def request_firmware_version(self):
+        """
+        Gets the device's firmware versions.
+        """
+        return self.fxs.request_firmware_version(self.dev_id)
+
+    # -----
+    # get_last_received_firmware_version
+    # -----
+    def get_last_received_firmware_version(self):
+        """
+        Gets the last read firmware versions.
+        """
+        return self.fxs.get_last_received_firmware_version(self.dev_id)
 
     # -----
     # close

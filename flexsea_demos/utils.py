@@ -3,14 +3,13 @@ import os
 from cleo.config import ApplicationConfig as BaseApplicationConfig
 from clikit.api.formatter import Style
 from flexsea import flexsea as flex
-from flexsea import fxUtils as fxu
 import yaml
 
 
 # ============================================
 #                    setup
 # ============================================
-def setup(cls, schema, paramFile):
+def setup(cls, schema, param_file):
     """
     Contains the boilerplate code for setting up a demo.
 
@@ -23,10 +22,10 @@ def setup(cls, schema, paramFile):
         Names and types of the parameters required by the demo. Used to
         validate the data read from the parameter file.
 
-    paramFile : str
+    param_file : str
         Name (and path) of the parameter file to read.
     """
-    params = read_yaml(paramFile)
+    params = read_yaml(param_file)
     params = validate(schema, params)
     assign_params(cls, params)
     setattr(cls, "fxs", flex.FlexSEA())
@@ -54,16 +53,18 @@ def validate(schema, data):
     data : dict
         The validated data.
     """
-    for requiredParam, requiredParamType in schema.items():
+    for required_param, required_param_type in schema.items():
         try:
-            assert requiredParam in data.keys()
-        except AssertionError:
-            raise AssertionError(f"'{requiredParam}' not found.")
+            assert required_param in data.keys()
+        except AssertionError as err:
+            raise AssertionError(f"'{required_param}' not found.") from err
         try:
-            assert isinstance(data[requiredParam], requiredParamType)
-        except AssertionError:
-            msg = f"'{requiredParamType}' isn't the right type for '{requiredParam}'."
-            raise AssertionError(msg)
+            assert isinstance(data[required_param], required_param_type)
+        except AssertionError as err:
+            msg = (
+                f"'{required_param_type}' isn't the right type for '{required_param}'."
+            )
+            raise AssertionError(msg) from err
     return data
 
 
@@ -90,13 +91,13 @@ def assign_params(cls, params):
 # ============================================
 #                  read_yaml
 # ============================================
-def read_yaml(yamlFile):
+def read_yaml(yaml_file):
     """
     Contains the boilerplate code for reading a yaml file.
 
     Parameters
     ----------
-    yamlFile : str
+    yaml_file : str
         The name (including path) of the yaml file to read.
 
     Returns
@@ -104,9 +105,9 @@ def read_yaml(yamlFile):
     dict
         A dictionary containing the data read from the file.
     """
-    yamlFile = sanitize_path(yamlFile)
-    with open(yamlFile, "r") as inFile:
-        data = yaml.safe_load(inFile)
+    yaml_file = sanitize_path(yaml_file)
+    with open(yaml_file, "r", encoding="utf-8") as in_file:
+        data = yaml.safe_load(in_file)
     return data
 
 
