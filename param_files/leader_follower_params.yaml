@@ -7,11 +7,13 @@
 # For this demo, there must be exactly two devices
 ports:
     # Windows
-    - COM3
-    - COM4
+    # - COM3
+    # - COM4
     # Ubuntu
     # - /dev/ttyS3
     # - /dev/ttyS4
+    - /dev/ttyACM1
+    - /dev/ttyACM0
     # Raspbian
     # - /dev/ttyACM0
     # - /dev/ttyACM1

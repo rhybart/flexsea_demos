@@ -6,9 +6,11 @@
 
 ports:
     # Windows
-    - COM3
+    # - COM3
     # Ubuntu
     # - /dev/ttyS3
+    - /dev/ttyACM1
+    - /dev/ttyACM0
     # Raspbian
     # - /dev/ttyACM0
 
