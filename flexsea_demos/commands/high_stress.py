@@ -55,8 +55,8 @@ class HighStressCommand(Command):
 
         self.dt = 0
         self.devices = []
-        self.cur_gains = {"KP" : 40, "KI" : 400, "KD" : 0, "K" : 0, "B" : 0, "FF" : 128}
-        self.pos_gains = {"KP" : 100, "KI" : 10, "KD" : 0, "K" : 0, "B" : 0, "FF" : 0}
+        self.cur_gains = {"KP": 40, "KI": 400, "KD": 0, "K": 0, "B": 0, "FF": 128}
+        self.pos_gains = {"KP": 100, "KI": 10, "KD": 0, "K": 0, "B": 0, "FF": 0}
         self.cmd_count = 0
         self.start_time = 0
         self.timestamps = []

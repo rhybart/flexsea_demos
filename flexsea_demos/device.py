@@ -25,7 +25,10 @@ class Device:
 
         self.dev_id = self.fxs.open(self.port, self.baud_rate, 0)
         self.fxs.start_streaming(self.dev_id, freq=100, log_en=True)
-        sleep(0.1)
+        # NOTE: This sleep is so long because there's an issue that
+        # occurs when trying to open multiple devices in rapid
+        # succession that causes flexsea to crash
+        sleep(1)
         self.app_type = self.fxs.get_app_type(self.dev_id)
 
         if self.app_type.value == fxe.FX_INVALID_APP.value:
@@ -89,15 +92,18 @@ class Device:
         Sets the gains on the device. Gains are, in order:
         kp, ki, kd, K, B & ff
         """
-        self.fxs.set_gains(
-            self.dev_id,
-            gains["KP"],
-            gains["KI"],
-            gains["KD"],
-            gains["K"],
-            gains["B"],
-            gains["FF"],
-        )
+        # TODO(CA): Investigate this problem and remove the hack below
+        # Set gains several times since they might not get set when only set once.
+        for _ in range(5):
+            self.fxs.set_gains(
+                self.dev_id,
+                gains["KP"],
+                gains["KI"],
+                gains["KD"],
+                gains["K"],
+                gains["B"],
+                gains["FF"],
+            )
 
     # -----
     # get_pos

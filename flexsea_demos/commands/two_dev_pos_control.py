@@ -34,6 +34,8 @@ class TwoDevPositionCommand(Command):
         self.nLoops = 0
         self.devices = []
         self.fxs = None
+        self.gains = {"KP": 50, "KI": 3, "KD": 0, "K": 0, "B": 0, "FF": 0}
+        self.off_gains = {"KP": 0, "KI": 0, "KD": 0, "K": 0, "B": 0, "FF": 0}
 
     # -----
     # handle
@@ -52,14 +54,14 @@ class TwoDevPositionCommand(Command):
 
         for i in range(2):
             self.devices.append(Device(self.fxs, self.ports[i], self.baud_rate))
-            self.devices[i].set_gains(50, 3, 0, 0, 0, 0)
-            self.devices[i].motor(fxe.FX_POSITION, self.devices[i].initial_position)
+            self.devices[i].set_gains(self.gains)
+            self.devices[i].motor(fxe.FX_POSITION, self.devices[i].initial_pos)
 
         self._two_devices_position_control()
 
         print("Turning off position control...")
         for i in range(2):
-            self.devices[i].set_gains(0, 0, 0, 0, 0, 0)
+            self.devices[i].set_gains(self.off_gains)
             self.devices[i].motor(fxe.FX_NONE, 0)
             sleep(0.5)
             self.devices[i].close()
@@ -74,7 +76,7 @@ class TwoDevPositionCommand(Command):
 
             for j in range(2):
                 cur_pos = self.devices[j].get_pos()
-                pos0 = self.devices[j].initial_position
+                pos0 = self.devices[j].initial_pos
 
                 print(f"Device {j}:\n---------\n")
                 print(f"Desired:              {pos0}")

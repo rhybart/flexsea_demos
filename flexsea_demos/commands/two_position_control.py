@@ -84,7 +84,7 @@ class TwoPositionCommand(Command):
         positions = [initial_angle, initial_angle + self.delta]
         current_pos = 0
 
-        device.set_gains(50, 0, 0, 0, 0, 0)
+        device.set_gains(self.gains)
         device.motor(fxe.FX_POSITION, initial_angle)
         self.start_time = time()
 

@@ -35,6 +35,9 @@ class LeaderFollowerCommand(Command):
         self.devices = []
         self.loop_delay = 0.05
         self.fxs = None
+        self.leader_gains = {"KP": 40, "KI": 400, "KD": 0, "K": 0, "B": 0, "FF": 128}
+        self.follower_gains = {"KP": 100, "KI": 1, "KD": 0, "K": 0, "B": 0, "FF": 0}
+        self.off_gains = {"KP": 0, "KI": 0, "KD": 0, "K": 0, "B": 0, "FF": 0}
 
     # -----
     # handle
@@ -55,18 +58,18 @@ class LeaderFollowerCommand(Command):
             self.devices.append(Device(self.fxs, self.ports[i], self.baud_rate))
 
         # Set first device to current controller with 0 current (0 torque)
-        self.devices[0].set_gains(40, 400, 0, 0, 0, 128)
+        self.devices[0].set_gains(self.leader_gains)
         self.devices[0].motor(fxe.FX_CURRENT, 0)
 
         # Set position controller for second device
-        self.devices[1].set_gains(100, 1, 0, 0, 0, 0)
-        self.devices[1].motor(fxe.FX_POSITION, self.devices[1].initial_position)
+        self.devices[1].set_gains(self.follower_gains)
+        self.devices[1].motor(fxe.FX_POSITION, self.devices[1].initial_pos)
 
         self._leader_follower()
 
         print("Turning off position control...")
         for i in range(2):
-            self.devices[i].set_gains(0, 0, 0, 0, 0, 0)
+            self.devices[i].set_gains(self.off_gains)
             self.devices[i].motor(fxe.FX_NONE, 0)
             sleep(0.5)
             self.devices[i].close()
@@ -75,8 +78,8 @@ class LeaderFollowerCommand(Command):
     # _leader_follower
     # -----
     def _leader_follower(self):
-        leader_pos0 = self.devices[0].initial_position
-        follower_pos0 = self.devices[1].initial_position
+        leader_pos0 = self.devices[0].initial_pos
+        follower_pos0 = self.devices[1].initial_pos
 
         leader_id = self.devices[0].dev_id
         follower_id = self.devices[1].dev_id

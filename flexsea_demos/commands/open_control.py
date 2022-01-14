@@ -63,7 +63,7 @@ class OpenControlCommand(Command):
         """
         Generates the list of voltages to step through.
         """
-        cycle_time = self.runTime / float(self.n_cycles)
+        cycle_time = self.run_time / float(self.n_cycles)
         step_count = int((cycle_time / 2) / 0.1)
         for s in range(step_count):
             self.voltages.append(-1 * self.max_voltage * (s * 1.0 / step_count))
