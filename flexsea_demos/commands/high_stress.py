@@ -55,8 +55,8 @@ class HighStressCommand(Command):
 
         self.dt = 0
         self.devices = []
-        self.cur_gains = [40, 400, 0, 0, 0, 128]
-        self.pos_gains = [100, 10, 0, 0, 0, 0]
+        self.cur_gains = {"KP" : 40, "KI" : 400, "KD" : 0, "K" : 0, "B" : 0, "FF" : 128}
+        self.pos_gains = {"KP" : 100, "KI" : 10, "KD" : 0, "K" : 0, "B" : 0, "FF" : 0}
         self.cmd_count = 0
         self.start_time = 0
         self.timestamps = []
@@ -83,8 +83,15 @@ class HighStressCommand(Command):
         self.dt = float(1 / (float(self.cmd_freq)))
         for i, port in enumerate(self.ports):
             self.devices.append({"port": Device(self.fxs, port, self.baud_rate)})
-            self.devices[i]["initial_pos"] = self.devices[i]["port"].initial_position
+            self.devices[i]["initial_pos"] = self.devices[i]["port"].initial_pos
             self.devices[i]["data"] = self.devices[i]["port"].read()
+            self.devices[i]["read_times"] = []
+            self.devices[i]["gains_times"] = []
+            self.devices[i]["motor_times"] = []
+            self.devices[i]["pos_requests"] = []
+            self.devices[i]["pos_measurements"] = []
+            self.devices[i]["curr_requests"] = []
+            self.devices[i]["curr_measurements"] = []
 
         self._get_samples()
         self.start_time = time()
@@ -94,7 +101,7 @@ class HighStressCommand(Command):
     # -----
     # _high_stress
     # -----
-    def _high_stress(self, devices):
+    def _high_stress(self):
         for rep in range(self.nLoops):
             fxu.print_loop_count_and_time(rep, self.nLoops, time() - self.start_time)
             self._step0(rep)
@@ -113,7 +120,7 @@ class HighStressCommand(Command):
 
         self._print_stats(elapsed_time)
         self._plot()
-        for dev in devices:
+        for dev in self.devices:
             dev["port"].close()
 
     # -----
@@ -124,9 +131,9 @@ class HighStressCommand(Command):
         cmds = []
         for dev in self.devices:
             if rep:
-                initial_cmd = {"cur": 0, "pos": dev.get_position()}
+                initial_cmd = {"cur": 0, "pos": dev["port"].get_pos()}
             else:
-                initial_cmd = {"cur": 0, "pos": dev.initial_position}
+                initial_cmd = {"cur": 0, "pos": dev["port"].initial_pos}
             cmds.append(initial_cmd)
         self._send_and_time_cmds(cmds, fxe.FX_POSITION, self.pos_gains, True)
 
@@ -255,7 +262,7 @@ class HighStressCommand(Command):
         print(f"Total time (s): {elapsed_time}")
         print(f"Requested command frequency: {self.cmd_freq}")
         print(f"Actual command frequency (Hz): {self.cmd_count / elapsed_time}")
-        print(f"\ncurrent_samples_line: {len(self.samples['current_samples_lines'])}")
+        print(f"\ncurrent_samples_line: {len(self.samples['current_samples_line'])}")
         print(f"size(TIMESTAMPS): {len(self.timestamps)}")
         print(f"size(currentRequests): {len(self.devices[0]['curr_requests'])}")
         print(
@@ -272,8 +279,8 @@ class HighStressCommand(Command):
                 dev["port"].dev_id,
                 self.figure_ind,
                 fxe.HSS_CURRENT,
-                self.curr_freq,
-                self.curr_amp,
+                self.current_freq,
+                self.current_amplitude,
                 type_str,
                 self.cmd_freq,
                 self.timestamps,
@@ -286,8 +293,8 @@ class HighStressCommand(Command):
                 dev["port"].dev_id,
                 self.figure_ind,
                 fxe.HSS_POSITION,
-                self.pos_freq,
-                self.pos_amp,
+                self.position_freq,
+                self.position_amplitude,
                 type_str,
                 self.cmd_freq,
                 self.timestamps,
