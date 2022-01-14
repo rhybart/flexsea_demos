@@ -41,6 +41,8 @@ class Device:
         print(f"Your device is an '{app_name}'", flush=True)
 
         self.initial_pos = self.get_pos()
+        self.controller_type = None
+        self.controller = None
 
     # -----
     # motor
@@ -89,12 +91,12 @@ class Device:
         """
         self.fxs.set_gains(
             self.dev_id,
-            gains["kp"],
-            gains["ki"],
-            gains["kd"],
+            gains["KP"],
+            gains["KI"],
+            gains["KD"],
             gains["K"],
             gains["B"],
-            gains["ff"],
+            gains["FF"],
         )
 
     # -----
@@ -141,6 +143,19 @@ class Device:
         Gets the last read firmware versions.
         """
         return self.fxs.get_last_received_firmware_version(self.dev_id)
+
+    # -----
+    # set_controller
+    # -----
+    def set_controller(self, controller_type):
+        """
+        Sets the device's controller.
+        """
+        self.controller_type = controller_type
+        if self.controller_type == fxe.HSS_CURRENT:
+            self.controller = fxe.FX_CURRENT
+        elif self.controller_type == fxe.HSS_POSITION:
+            self.controller = fxe.FX_POSITION
 
     # -----
     # close

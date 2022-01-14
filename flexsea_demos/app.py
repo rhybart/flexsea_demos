@@ -52,4 +52,4 @@ class FlexseaDemoApplication(Application):
             VersionCommand,
         ]
         for command in command_list:
-            self.add(command)
+            self.add(command())

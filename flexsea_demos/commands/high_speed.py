@@ -35,7 +35,7 @@ class HighSpeedCommand(Command):
         "signal_amplitude": int,
         "nLoops": int,
         "signal_freq": int,
-        "cycle_delay": int,
+        "cycle_delay": float,
         "request_jitter": bool,
         "jitter": int,
     }
@@ -65,6 +65,8 @@ class HighSpeedCommand(Command):
         self.figure_counter = 1
         self.signal = {"sine": 1, "line": 2}
         self.i = 0
+        self.current_gains = {"KP": 40, "KI": 400, "KD": 0, "K": 0, "B": 0, "FF": 128}
+        self.pos_gains = {"KP": 300, "KI": 50, "KD": 0, "K": 0, "B": 0, "FF": 0}
         self.plot_data = {
             "requests": [],
             "measurements": [],
@@ -89,11 +91,21 @@ class HighSpeedCommand(Command):
         self.dt = 1.0 / (float(self.cmd_freq))
         self._get_samples()
 
+        if self.controller_type == 0:
+            self.controller_type = fxe.HSS_POSITION
+            gains = self.pos_gains
+        elif self.controller_type == 1:
+            self.controller_type = fxe.HSS_CURRENT
+            gains = self.current_gains
+        else:
+            raise ValueError(f"Invalid controller type '{self.controller_type}'")
+
         for port in self.ports:
             input("Press 'ENTER' to continue...")
             self._reset_plot()
             device = Device(self.fxs, port, self.baud_rate)
             device.set_controller(self.controller_type)
+            device.set_gains(gains)
             self._high_speed(device)
             device.motor(fxe.FX_NONE, 0)
             sleep(0.1)
