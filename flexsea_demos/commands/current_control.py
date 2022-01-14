@@ -8,7 +8,7 @@ from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
 
 from flexsea_demos.device import Device
-from flexsea_demos.utils import init
+from flexsea_demos.utils import setup
 
 
 # ============================================
@@ -21,6 +21,30 @@ class CurrentControlCommand(Command):
     current_control
         {paramFile : Yaml file with demo parameters.}
     """
+    # Schema of parameters required by the demo
+    required = {
+        "ports" : List,
+        "baud_rate" : int,
+        "run_time" : int,
+        "gains" : Dict,
+        "hold_current" : int,
+        "ramp_down_steps" : int
+    } 
+
+    # -----
+    # constructor
+    # -----
+    def __init__(self):
+        super().__init__()
+        self.ports = []
+        self.baud_rate = 0
+        self.run_time = 0
+        self.gains = {}
+        self.hold_current = 0
+        self.ramp_down_steps = 0
+        self.nLoops = 0
+        self.fxs = None
+
     # -----
     # handle
     # -----
@@ -28,24 +52,23 @@ class CurrentControlCommand(Command):
         """
         Current control demo.
         """
-        params = init(self.argument("paramFile"), self._validate)
-        fxs = flex.FlexSEA()
-        nLoops = int(params["run_time"] / 0.1)
-        for port in params["ports"]:
+        setup(self, self.required, self.argument("paramFile"))
+        self.nLoops = int(self.run_time / 0.1)
+        for port in self.ports:
             input("Press 'ENTER' to continue...")
-            device = Device(fxs, port, params["baud_rate"])
-            device.set_gains(params["gains"])
+            device = Device(self.fxs, port, self.baud_rate)
+            device.set_gains(self.gains)
             sleep(0.5)
-            self._current_control(device, nLoops, params["hold_current"], params["ramp_down_steps"])
+            self._current_control(device)
 
     # -----
     # _current_control
     # -----
-    def _current_control(self, device, nLoops, hold_current, ramp_down_steps):
-        for _ in range(nLoops):
-            self._ramp(device, hold_current)
-        for i in range(ramp_down_steps):
-            current = hold_current * (ramp_down_steps - i) / ramp_down_steps
+    def _current_control(self, device):
+        for _ in range(self.nLoops):
+            self._ramp(device, self.hold_current)
+        for i in range(self.ramp_down_steps):
+            current = self.hold_current * (self.ramp_down_steps - i) / self.ramp_down_steps
             self._ramp(device, current)
         device.motor(fxe.FX_NONE, 0)
         sleep(0.5)
@@ -67,38 +90,3 @@ class CurrentControlCommand(Command):
         print("Measured (mA):        ", data.mot_cur)
         print("Difference (mA):      ", (data.mot_cur - current), "\n")
         device.print(data)
-
-    # -----
-    # _validate
-    # -----
-    def _validate(self, params):
-        """
-        The current control demo requires at least one port, a baud rate,
-        a run time, gains, a current to hold, and the number of ramp down steps.
-
-        Parameters
-        ----------
-        params : dict
-            The demo parameters read from the parameter file.
-
-        Raises
-        ------
-        AssertionError
-            If the name or type given for a parameter is invalid.
-
-        Returns
-        -------
-        params : dict
-            The validated parameters.
-        """
-        required = {"ports" : List, "baud_rate" : int, "run_time" : int, "gains" : Dict, "hold_current" : int, "ramp_down_steps" : int} 
-        for requiredParam, requiredParamType in required.items():
-            try:
-                assert requiredParam in params.keys()
-            except AssertionError:
-                raise AssertionError(f"'{requiredParam}' not in parameter file.")
-            try:
-                assert isinstance(params[requiredParam], requiredParamType)
-            except AssertionError:
-                raise AssertionError(f"'{requiredParamType}' isn't the right type.")
-        return params

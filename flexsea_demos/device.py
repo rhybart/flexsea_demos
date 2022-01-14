@@ -1,3 +1,5 @@
+from time import sleep
+
 from flexsea import flexsea as flex
 from flexsea import fxEnums as fxe
 from flexsea import fxUtils as fxu
@@ -23,6 +25,7 @@ class Device:
 
         self.dev_id = self.fxs.open(self.port, self.baud_rate, 0)
         self.fxs.start_streaming(self.dev_id, freq=100, log_en=True)
+        sleep(0.1)
         self.app_type = self.fxs.get_app_type(self.dev_id)
 
         if self.app_type.value == fxe.FX_INVALID_APP.value:
@@ -34,6 +37,8 @@ class Device:
             raise RuntimeError(f"Unsupported application type: {self.app_type.value}")
 
         print(f"Your device is an '{app_name}'", flush=True)
+
+        self.initial_pos = self.get_pos()
 
     # -----
     # motor
@@ -75,6 +80,18 @@ class Device:
     def set_gains(self, gains):
         # Gains are, in order: kp, ki, kd, K, B & ff
         self.fxs.set_gains(self.dev_id, gains["kp"], gains["ki"], gains["kd"], gains["K"], gains["B"], gains["ff"])
+
+    # -----
+    # get_pos
+    # -----
+    def get_pos(self):
+        return self.read().mot_ang
+
+    # -----
+    # activate_bootloader
+    # -----
+    def activate_bootloader(self, target):
+        self.fxs.activate_bootloader(self.dev_id, target)
 
     # -----
     # close

@@ -1,3 +1,16 @@
+from time import sleep
+from typing import List
+
+from cleo import Command
+from flexsea import flexsea as flex
+from flexsea import fxEnums as fxe
+from flexsea import fxPlotting as fxp
+from flexsea import fxUtils as fxu
+
+from flexsea_demos.device import Device
+from flexsea_demos.utils import setup
+
+
 # ============================================
 #             HighSpeedCommand
 # ============================================
@@ -8,12 +21,44 @@ class HighSpeedCommand(Command):
     high_speed
         {paramFile : Yaml file with demo parameters.}
     """
+    # Schema of parameters required by the demo
+    required = {
+        "ports" : List,
+        "baud_rate" : int,
+        "controller_type" : int,
+        "signal_type" : int,
+        "cmd_freq" : int,
+        "signal_amplitude" : int,
+        "nLoops" : int,
+        "signal_freq" : int,
+        "cycle_delay" : int,
+        "request_jitter" : bool,
+        "jitter" : int
+    }
+
     # -----
     # constructor
     # -----
     def __init__(self):
         super().__init__()
 
+        self.ports = []
+        self.baud_rate = 0
+        self.controller_type = 0
+        self.signal_type = 0
+        self.cmd_freq = 0
+        self.signal_amplitude = 0
+        self.nLoops = 0
+        self.signal_freq = 0
+        self.cycle_delay = 0
+        self.request_jitter = False
+        self.jitter = 0
+
+        self.fxs = None
+        self.dt = 0.
+        self.start_time = None
+        self.samples = []
+        self.figure_counter = 1
         self.signal = {"sine" : 1, "line" : 2}
         self.plot_data = {
             "requests" = [],
@@ -35,71 +80,46 @@ class HighSpeedCommand(Command):
         """
         Runs the high speed demo.
         """
-        params = init(self.argument("paramFile"), self._validate)
-        fxs = flex.FlexSEA()
-        dt = 1.0 / (float(params["cmd_freq"]))
-        samples = self._get_samples(params["signal_type"], params["signal_amplitude"], params["signal_freq"], params["cmd_freq"], params["request_jitter"], params["jitter"])
+        setup(self, self.required, self.argument("paramFile"))
+        self.dt = 1.0 / (float(self.cmd_freq))
+        self._get_samples()
 
-        for port in ports:
+        for port in self.ports:
             input("Press 'ENTER' to continue...")
             self._reset_plot()
-            device = Device(fxs, port, params["baud_rate"])
-            device.set_controller(params["controller_type"])
-            self._high_speed(device, params["nLoops"], samples, dt)
+            device = Device(self.fxs, port, self.baud_rate)
+            device.set_controller(self.controller_type)
+            self._high_speed(device)
             device.motor(fxe.FX_NONE, 0)
             sleep(0.1)
-            self._plot()
+            self._plot(device)
             device.close()
 
     # -----
     # _get_samples
     # -----
-    def _get_samples(self, sig_type, amp, sig_freq, cmd_freq, request_jitter, jitter):
+    def _get_samples(self):
         """
         Generates sample values for the demo.
-
-        Parameters
-        ----------
-        sig_type : int
-            Either 1 for "sine" or  2 for "line".
-
-        amp : int
-            The max height of the signal.
-
-        sig_freq : int
-            Frequency of the sine wave. Only applies if `signal_type` is "sine".
-
-        cmd_freq : int
-            The sampling frequency.
-
-        request_jitter : bool
-            Flag indicating whether or not jitter should be added to the
-            generated samples.
-
-        jitter : int
-            The amount of jitter to add to the samples, if desired.
-
-        Returns
-        -------
-        np.ndarray
-            An array containing the samples to use in the demo.
         """
         np.random.seed(42)
-        if sig_type not in self.signal.values():
-            raise ValueError(f"Unsupported signal type: `{sig_type}`")
-        f = sig_freq if sig_type == self.signal["sine"] else 1
-        samples = fxu.sin_generator(amp, f, cmd_freq)
-        if request_jitter:
-            samples = samples + np.random.normal(loc=jitter, size=samples.shape)
+        if self.signal_type not in self.signal.values():
+            raise ValueError(f"Unsupported signal type: `{self.signal_type}`")
+        if self.signal_type == self.signal["sine"]:
+            f = self.signal_freq
+        else:
+            f = 1
+        self.samples = fxu.sin_generator(self.signal_amplitude, f, self.cmd_freq)
+        if self.request_jitter:
+            self.samples = self.samples + np.random.normal(loc=self.jitter, size=self.samples.shape)
         print("Command table:")
-        print(np.int64(samples))
-        return samples
+        print(np.int64(self.samples))
 
     # -----
     # _high_speed
     # -----
-    def _high_speed(self, device, nLoops, samples, dt):
-        start_time = time()
+    def _high_speed(self, device):
+        self.start_time = time()
         if device.controller_type == fxe.HSS_POSITION:
             sleep(0.1)
             data = device.read()
@@ -107,12 +127,12 @@ class HighSpeedCommand(Command):
         else:
             pos0 = 0
 
-        for rep in range(nLoops):
-            elapsed_time = time() - start_time
-            fxu.print_loop_count_and_time(rep, nLoops, elapsed_time)
+        for rep in range(self.nLoops):
+            elapsed_time = time() - self.start_time
+            fxu.print_loop_count_and_time(rep, self.nLoops, elapsed_time)
 
-            for sample in samples:
-                sleep(delay_time)
+            for sample in self.samples:
+                sleep(self.dt)
                 if device.controller_type != fxe.HSS_CURRENT:
                     sample = sample + pos0
 
@@ -131,26 +151,58 @@ class HighSpeedCommand(Command):
                 else:
                     val = data.mot_ang - pos0
 
-                self.plot_data["times"].append(time() - start_time)
+                self.plot_data["times"].append(time() - self.start_time)
                 self.plot_data["measurements"].append(val)
                 self.plot_data["requests"].append(sample)
 
             # Delay between cycles (sine wave only)
-            if signal_type == self.signal["sine"]:
-                for _ in range(int(cycle_delay / delay_time)):
-                    sleep(delay_time)
-                    data = fxs.read_device(dev_id)
+            if self.signal_type == self.signal["sine"]:
+                for _ in range(int(self.cycle_delay / self.dt)):
+                    sleep(self.dt)
+                    data = device.read()
 
                     if device.controller_type == fxe.HSS_CURRENT:
                         self.plot_data["measurements"].append(data.mot_cur)
                     elif device.controller_type == fxe.HSS_POSITION:
                         self.plot_data["measurements"].append(data.mot_ang - pos0)
 
-                    plot_data["times"].append(time() - start_time)
+                    plot_data["times"].append(time() - self.start_time)
                     plot_data["requests"].append(sample)
 
             # We'll draw a line at the end of every period
-            self.plot_data["cycle_stop_times"].append(time() - start_time)
+            self.plot_data["cycle_stop_times"].append(time() - self.start_time)
+
+    # -----
+    # _plot
+    # -----
+    def _plot(self, device):
+        if self.signal_type == self.signal["sine"]:
+            signal_type_str = "sine"
+        else:
+            signal_type_str = "line"
+        elapsed_time = time() - self.start_time
+        actual_period = self.plot_data["cycle_stop_times"][0]
+        actual_frequency = 1 / actual_period
+        cmd_freq = i / elapsed_time
+        # Figure: setpoint, desired vs measured (1st device)
+        figure_counter = fxp.plot_setpoint_vs_desired(
+            device.dev_id,
+            self.figure_counter,
+            device.controller_type,
+            actual_frequency,
+            self.signal_amplitude,
+            signal_type_str,
+            self.cmd_freq,
+            self.plot_data["times"],
+            self.plot_data["requests"],
+            self.plot_data["measurements"],
+            self.plot_data["cycle_stop_times"],
+        )
+        self.figure_counter = fxp.plot_exp_stats(
+            device.dev_id, self.figure_counter, self.plot_data["dev_write_command_times"], self.plot_data["dev_read_command_times"]
+        )
+        fxu.print_plot_exit()
+        plt.show()
 
     # -----
     # _reset_plot
@@ -165,35 +217,3 @@ class HighSpeedCommand(Command):
             "dev_read_command_times" = [],
         }
         plt.clf()
-
-    # -----
-    # _validate
-    # -----
-    def _validate(self, params):
-        """
-        The read_only demo requires at least one port, a baud rate,
-        and a run time.
-
-        Parameters
-        ----------
-        params : dict
-            The demo parameters read from the parameter file.
-
-        Raises
-        ------
-        KeyError
-            If a required parameter isn't found.
-
-        ValueError
-            If the value given for a parameter is invalid.
-
-        Returns
-        -------
-        params : dict
-            The validated parameters.
-        """
-        win_max_freq = 100
-        if fxu.is_win() and params["cmd_freq"] > win_max_freq:
-            params["cmd_freq"] = win_max_freq
-            print(f"Capping the command frequency in Windows to {win_max_freq}")
-        return params

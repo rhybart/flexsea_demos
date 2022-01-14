@@ -1,6 +1,7 @@
 from cleo import Application
 
 from flexsea_demos.commands.current_control import CurrentControlCommand
+from flexsea_demos.commands.high_speed import HighSpeedCommand
 from flexsea_demos.commands.impedance_control import ImpedanceControlCommand
 from flexsea_demos.commands.open_control import OpenControlCommand
 from flexsea_demos.commands.position_control import PositionControlCommand
@@ -31,8 +32,11 @@ class FlexseaDemoApplication(Application):
     def _get_commands(self):
         commandList = [
             CurrentControlCommand,
+            HighSpeedCommand,
+            ImpedanceControlCommand,
             OpenControlCommand,
             PositionControlCommand,
             ReadOnlyCommand,
+            TwoPositionControlCommand,
         ]
         return commandList
