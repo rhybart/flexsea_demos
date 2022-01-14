@@ -12,7 +12,7 @@ from flexsea_demos.utils import setup
 # ============================================
 #              FindPolesCommand
 # ============================================
-class FindPoles(Command):
+class FindPolesCommand(Command):
     """
     Finds poles on the device.
 

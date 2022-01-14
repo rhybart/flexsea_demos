@@ -10,9 +10,9 @@ from flexsea_demos.utils import setup
 
 
 # ============================================
-#       TwoDevPositionControlCommand
+#            TwoDevPositionCommand
 # ============================================
-class TwoDevPositionControlCommand(Command):
+class TwoDevPositionCommand(Command):
     """
     Runs the two devices position control demo.
 

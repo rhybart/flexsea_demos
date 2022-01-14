@@ -22,7 +22,6 @@ class BootloaderCommand(Command):
     required = {
         "ports" : List,
         "baud_rate" : int,
-        "run_time" : int
         "target" : str,
     }
 
@@ -33,9 +32,7 @@ class BootloaderCommand(Command):
         super().__init__()
         self.ports = []
         self.baud_rate = 0
-        self.run_time = 0
         self.target = ""
-        self.nLoops = 0
         self.fxs = None
 
         self.targets = {
@@ -55,7 +52,6 @@ class BootloaderCommand(Command):
         Runs the bootloader demo.
         """
         setup(self, self.required, self.argument("paramFile"))
-        self.nLoops = int(self.run_time / 0.1)
         for port in self.ports:
             device = Device(self.fxs, port, self.baud_rate)
             self._bootloader(device)

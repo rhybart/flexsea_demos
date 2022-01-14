@@ -1,0 +1,47 @@
+# Lines that start with a '#' are comments. The '-' indicates that the
+# item is a part of a list
+
+# Device ports. Edit/uncomment as needed. The typical port names for
+# each OS are given.
+ports:
+    # Windows
+    - COM3
+    # Ubuntu
+    # - /dev/ttyS3
+    # Raspbian
+    # - /dev/ttyACM0
+
+baud_rate : 230400
+
+# Controller type. 1 is HSS_CURRENT. See fxEnums.py in the flexsea repo
+controller_type : 1
+
+# Signal type. 1 is sine, 2 is line
+signal_type : 1
+
+# Cmd frequency. Frequency (in Hz) at which the device streams data
+cmd_freq : 500
+
+# Signal amplitude. If the controller is position, it's the encoder
+# position. If the controller is current, it's the current in mA
+signal_amplitude : 500
+
+# nLoops. The number of times to send the desired signal to the
+# controller. Proxy for run time.
+nLoops : 4
+
+# Signal frequency. Only applies if the signal type is a sine wave.
+# This is the frequency of that sine wave.
+signal_freq : 5
+
+# Cycle delay. Only applies if the signal type is a sine wave. Gives
+# the delay between signals sent to the controller.
+cycle_delay : 0.1
+
+# Request jitter. If True, Gaussian noise (jitter) is added to each
+# signal sent to the controller.
+request_jitter : False
+
+# Jitter. The mean of the Gaussian used to generate jitter. The
+# variance of the distribution is numpy's default.
+jitter : 20

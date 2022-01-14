@@ -1,0 +1,39 @@
+# Lines that start with a '#' are comments. The '-' indicates that the
+# item is a part of a list
+
+# Device ports. Edit/uncomment as needed. The typical port names for
+# each OS are given.
+ports:
+    # Windows
+    - COM3
+    # Ubuntu
+    # - /dev/ttyS3
+    # Raspbian
+    # - /dev/ttyACM0
+
+baud_rate : 230400
+
+# Command frequency. Rate (in Hz) that data is streamed from device.
+cmd_freq : 1000
+
+# Position amplitude. Amplitude (in ticks) of the position controller.
+position_amplitude : 10000
+
+# Current amplitude. Amplitude (in mA) of the current controller.
+current_amplitude : 1500
+
+# Position frequency. Sine wave frequency (in Hz) for the position
+# controller
+position_freq : 1
+
+# Current frequency. Sine wave frequency (in H) for the current
+# controller.
+current_freq : 5
+
+# Current asymmetric g. Factor determining how much current to use
+# on the "way back" to the starting point. Should be between 1-3.
+current_asymmetric_g : 1.15
+
+# nLoops. Number of times to send the desired signal to the controller.
+# Proxy for run time.
+nLoops : 3

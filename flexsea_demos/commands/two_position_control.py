@@ -15,9 +15,9 @@ from flexsea_demos.utils import setup
 
 
 # ============================================
-#         TwoPositionControlCommand
+#             TwoPositionCommand
 # ============================================
-class TwoPositionControlCommand(Command):
+class TwoPositionCommand(Command):
     """
     Runs the two position control demo.
 

@@ -1,0 +1,19 @@
+# Lines that start with a '#' are comments. The '-' indicates that the
+# item is a part of a list
+
+# Device ports. Edit/uncomment as needed. The typical port names for
+# each OS are given.
+ports:
+    # Windows
+    - COM3
+    # Ubuntu
+    # - /dev/ttyS3
+    # Raspbian
+    # - /dev/ttyACM0
+
+baud_rate : 230400
+
+# The MCU for which we are testing the bootloader. Can be
+# Habs for Habsolute, Reg for Regulate, Exe for Execute, Mn for Manage,
+# BT121 for Bluetooth, or XBee
+target : Mn

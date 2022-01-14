@@ -1,0 +1,34 @@
+# Lines that start with a '#' are comments. The '-' indicates that the
+# item is a part of a list
+
+# Device ports. Edit/uncomment as needed. The typical port names for
+# each OS are given.
+ports:
+    # Windows
+    - COM3
+    # Ubuntu
+    # - /dev/ttyS3
+    # Raspbian
+    # - /dev/ttyACM0
+
+baud_rate : 230400
+
+# This is the run time (in seconds) for each device specified in the
+# ports list
+run_time : 10
+
+# Gains: kp, ki, kd, K, B, ff
+gains:
+    KP : 40
+    KI : 400
+    KD : 0
+    K : 0
+    B : 0
+    FF : 0
+    
+
+# Hold current (mA)
+hold_current : 1000 
+
+# Ramp down steps
+ramp_down_steps : 50

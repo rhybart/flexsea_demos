@@ -12,7 +12,7 @@ from flexsea_demos.utils import setup
 # ============================================
 #          LeaderFollowerCommand
 # ============================================
-class LeaderFollower(Command):
+class LeaderFollowerCommand(Command):
     """
     Runs the leader follower demo.
 
